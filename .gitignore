@@ -2,5 +2,3 @@
 xcuserdata/
 *.xcuserstate
 
-# Firebase local config
-GoogleService-Info.plist
