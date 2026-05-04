@@ -1,7 +1,9 @@
 import SwiftUI
 
 struct SignInView: View {
-    let onSignIn: (AuthProvider) -> Void
+    let isSigningIn: Bool
+    let errorMessage: String?
+    let onGoogleSignIn: () -> Void
 
     var body: some View {
         ZStack {
@@ -15,32 +17,42 @@ struct SignInView: View {
                     appIcon
 
                     VStack(spacing: 6) {
-                        Text("Money Manager")
+                        Text("iOS Authentication")
                             .font(.system(size: 34, weight: .bold, design: .rounded))
                             .foregroundStyle(.white)
 
-                        Text("Track every taka, on every\ndevice")
+                        Text("Sample App for Firebase Authentication")
                             .font(.system(size: 19, weight: .medium, design: .rounded))
                             .foregroundStyle(Color.white.opacity(0.78))
                             .multilineTextAlignment(.center)
+                    }
+
+                    if let errorMessage {
+                        Text(errorMessage)
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .foregroundStyle(Color(red: 0.98, green: 0.74, blue: 0.74))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 18)
                     }
 
                     VStack(spacing: 14) {
                         AuthButton(
                             title: "Sign in with Apple",
                             icon: AuthProvider.apple.icon,
-                            iconColor: AuthProvider.apple.iconColor
-                        ) {
-                            onSignIn(.apple)
-                        }
+                            iconColor: AuthProvider.apple.iconColor,
+                            isDisabled: true,
+                            caption: "Coming soon",
+                            action: {}
+                        )
 
                         AuthButton(
-                            title: "Sign in with Google",
+                            title: isSigningIn ? "Signing in..." : "Sign in with Google",
                             icon: AuthProvider.google.icon,
-                            iconColor: AuthProvider.google.iconColor
-                        ) {
-                            onSignIn(.google)
-                        }
+                            iconColor: AuthProvider.google.iconColor,
+                            isDisabled: isSigningIn,
+                            caption: nil,
+                            action: onGoogleSignIn
+                        )
                     }
                     .padding(.top, 14)
 
@@ -74,33 +86,45 @@ private struct AuthButton: View {
     let title: String
     let icon: String
     let iconColor: Color
+    let isDisabled: Bool
+    let caption: String?
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(iconColor)
-                    .frame(width: 24)
+            VStack(spacing: 4) {
+                HStack(spacing: 12) {
+                    Image(systemName: icon)
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(isDisabled ? Color.white.opacity(0.55) : iconColor)
+                        .frame(width: 24)
 
-                Text(title)
-                    .font(.system(size: 25, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
+                    Text(title)
+                        .font(.system(size: 25, weight: .bold, design: .rounded))
+                        .foregroundStyle(isDisabled ? Color.white.opacity(0.62) : .white)
+                        .frame(maxWidth: .infinity)
+                }
+
+                if let caption {
+                    Text(caption)
+                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.white.opacity(0.45))
+                }
             }
             .padding(.horizontal, 20)
-            .frame(height: 66)
+            .frame(minHeight: 66)
             .background(Color.clear)
             .overlay {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(Color.white.opacity(0.20), lineWidth: 1)
+                    .stroke(Color.white.opacity(isDisabled ? 0.12 : 0.20), lineWidth: 1)
             }
         }
+        .disabled(isDisabled)
         .buttonStyle(.plain)
+        .opacity(isDisabled ? 0.72 : 1.0)
     }
 }
 
 #Preview {
-    SignInView { _ in }
+    SignInView(isSigningIn: false, errorMessage: nil) { }
 }

@@ -6,34 +6,49 @@
 //
 
 import SwiftUI
+import Combine
 
 struct ContentView: View {
-    @State private var route: AppRoute = .signIn
+    @StateObject private var authManager = AuthManager()
 
     var body: some View {
-        switch route {
-        case .signIn:
-            SignInView { provider in
-                route = .authorizing(provider)
-            }
-        case .authorizing(let provider):
-            AuthorizationView(provider: provider)
-                .task(id: provider) {
-                    try? await Task.sleep(for: .seconds(3.0))
-                    route = .home
+        switch authManager.state {
+        case .signedOut:
+            SignInView(
+                isSigningIn: false,
+                errorMessage: nil,
+                onGoogleSignIn: {
+                    Task {
+                        await authManager.signInWithGoogle()
+                    }
                 }
-        case .home:
-            HomeView {
-                route = .signIn
+            )
+        case .signingIn:
+            AuthorizationView(
+                title: "Authorizing with Google",
+                message: "Opening your Google account and completing Firebase sign-in."
+            )
+        case .loadingProfile:
+            AuthorizationView(
+                title: "Loading your profile",
+                message: "Checking Firestore and restoring your account data."
+            )
+        case .signedIn(let userProfile):
+            HomeView(userProfile: userProfile) {
+                authManager.signOut()
             }
+        case .error(let message):
+            SignInView(
+                isSigningIn: false,
+                errorMessage: message,
+                onGoogleSignIn: {
+                    Task {
+                        await authManager.signInWithGoogle()
+                    }
+                }
+            )
         }
     }
-}
-
-private enum AppRoute: Equatable {
-    case signIn
-    case authorizing(AuthProvider)
-    case home
 }
 
 enum AuthProvider: String {
@@ -69,7 +84,8 @@ enum AuthProvider: String {
 }
 
 private struct AuthorizationView: View {
-    let provider: AuthProvider
+    let title: String
+    let message: String
 
     var body: some View {
         ZStack {
@@ -82,20 +98,20 @@ private struct AuthorizationView: View {
                         .fill(Color.white.opacity(0.10))
                         .frame(width: 92, height: 92)
 
-                    Image(systemName: provider.icon)
+                    Image(systemName: "lock.shield")
                         .font(.system(size: 38, weight: .medium))
-                        .foregroundStyle(provider.iconColor)
+                        .foregroundStyle(.white)
                 }
 
                 ProgressView()
                     .tint(.white)
                     .scaleEffect(1.15)
 
-                Text("Authorizing with \(provider.title)")
+                Text(title)
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
 
-                Text("This is a dummy authorization step before the app opens the home tab.")
+                Text(message)
                     .font(.system(size: 16, weight: .medium, design: .rounded))
                     .foregroundStyle(Color.white.opacity(0.72))
                     .multilineTextAlignment(.center)

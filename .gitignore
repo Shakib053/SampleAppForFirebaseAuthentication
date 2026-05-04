@@ -1,0 +1,6 @@
+# Xcode user-specific files
+xcuserdata/
+*.xcuserstate
+
+# Firebase local config
+GoogleService-Info.plist

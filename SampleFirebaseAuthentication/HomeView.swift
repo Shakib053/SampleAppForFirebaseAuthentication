@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct HomeView: View {
+    let userProfile: UserProfile
     let onLogout: () -> Void
 
     private let transactions: [TransactionItem] = [
@@ -65,6 +66,14 @@ struct HomeView: View {
                         .font(.system(size: 17, weight: .medium, design: .rounded))
                         .foregroundStyle(Color.white.opacity(0.82))
 
+                    Text(userProfile.displayName)
+                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .foregroundStyle(Color.white.opacity(0.88))
+
+                    Text(userProfile.email)
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(Color.white.opacity(0.72))
+
                     Text("Total balance")
                         .font(.system(size: 15, weight: .medium, design: .rounded))
                         .foregroundStyle(Color.white.opacity(0.82))
@@ -76,12 +85,7 @@ struct HomeView: View {
 
                 Spacer()
 
-                Text("RH")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .frame(width: 50, height: 50)
-                    .background(Color(red: 0.09, green: 0.45, blue: 0.32))
-                    .clipShape(Circle())
+                ProfileBadge(userProfile: userProfile)
             }
 
             HStack(spacing: 14) {
@@ -231,6 +235,54 @@ private struct TabBarItem: View {
     }
 }
 
+private struct ProfileBadge: View {
+    let userProfile: UserProfile
+
+    var body: some View {
+        Group {
+            if let url = URL(string: userProfile.photoURL), !userProfile.photoURL.isEmpty {
+                AsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .scaledToFill()
+                } placeholder: {
+                    initialsBadge
+                }
+                .frame(width: 50, height: 50)
+                .clipShape(Circle())
+            } else {
+                initialsBadge
+            }
+        }
+    }
+
+    private var initialsBadge: some View {
+        Text(initials)
+            .font(.system(size: 18, weight: .bold, design: .rounded))
+            .foregroundStyle(.white)
+            .frame(width: 50, height: 50)
+            .background(Color(red: 0.09, green: 0.45, blue: 0.32))
+            .clipShape(Circle())
+    }
+
+    private var initials: String {
+        let pieces = userProfile.displayName.split(separator: " ")
+        let letters = pieces.prefix(2).compactMap { $0.first }
+        let result = String(letters)
+        return result.isEmpty ? "MM" : result.uppercased()
+    }
+}
+
 #Preview {
-    HomeView { }
+    HomeView(
+        userProfile: UserProfile(
+            uid: "preview-uid",
+            email: "preview@example.com",
+            displayName: "Preview User",
+            photoURL: "",
+            provider: "google",
+            createdAt: Date(),
+            lastLoginAt: Date()
+        )
+    ) { }
 }
