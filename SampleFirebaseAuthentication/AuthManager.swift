@@ -210,26 +210,26 @@ final class AuthManager: ObservableObject {
         value as? Timestamp
     }
 
-    private static func topViewController(
-        base: UIViewController? = UIApplication.shared.connectedScenes
+    private static func topViewController(base: UIViewController? = nil) -> UIViewController? {
+        let resolvedBase = base ?? UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .flatMap(\.windows)
             .first(where: \.isKeyWindow)?
             .rootViewController
-    ) -> UIViewController? {
-        if let navigation = base as? UINavigationController {
+
+        if let navigation = resolvedBase as? UINavigationController {
             return topViewController(base: navigation.visibleViewController)
         }
 
-        if let tab = base as? UITabBarController {
+        if let tab = resolvedBase as? UITabBarController {
             return topViewController(base: tab.selectedViewController)
         }
 
-        if let presented = base?.presentedViewController {
+        if let presented = resolvedBase?.presentedViewController {
             return topViewController(base: presented)
         }
 
-        return base
+        return resolvedBase
     }
 
     private static func message(for error: Error) -> String {
